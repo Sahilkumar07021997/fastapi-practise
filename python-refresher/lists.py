@@ -77,6 +77,7 @@ print(fruits)  # Output: ['cherry', 'avocado', 'blueberry', 'honeydew', 'kiwi']
 # Finding the index of an item
 index_of_blueberry = fruits.index("blueberry")
 print(index_of_blueberry)  # Output: 2
+
 # Counting occurrences of an item
 count_of_cherry = fruits.count("cherry")
 print(count_of_cherry)  # Output: 1
@@ -104,6 +105,40 @@ print(combined)  # Output: [('cherry', 'red'), ('avocado', 'green'), ('blueberry
 # List unpacking
 first, second, *rest = fruits
 print(first)  # Output: cherry
+print(second)  # Output: avocado
+print(rest)  # Output: ['blueberry', 'honeydew', 'kiwi']
+
+# Using map to apply a function to all items in a list
+upper_fruits = list(map(str.upper, fruits))
+print(upper_fruits)  # Output: ['CHERRY', 'AVOCADO', 'BLUEBERRY', 'HONEYDEW', 'KIWI']
+
+# Using filter to filter items in a list
+long_fruits = list(filter(lambda x: len(x) > 5, fruits))
+print(long_fruits)  # Output: ['blueberry', 'honeydew']
+
+# List comprehension with nested loops
+pairs = [(x, y) for x in range(3) for y in range(3)]
+print(pairs)  # Output: [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
+
+# Flattening a nested list using list comprehension
+nested = [[1, 2, 3], [4, 5], [6]]
+flattened = [item for sublist in nested for item in sublist]
+print(flattened)  # Output: [1, 2, 3, 4, 5, 6]
+
+# Using all() and any() with lists
+all_positive = all(x > 0 for x in [1, 2, 3, 4])
+print(all_positive)  # Output: True
+any_negative = any(x < 0 for x in [1, -2, 3, 4])
+print(any_negative)  # Output: True
+
+# Finding the maximum and minimum values in a list
+numbers = [10, 20, 5, 30]
+max_number = max(numbers)
+min_number = min(numbers)
+print(max_number)  # Output: 30
+print(min_number)  # Output: 5
+
+
 
 
 
