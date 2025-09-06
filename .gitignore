@@ -2,3 +2,4 @@
 fastapi/fastapienv/
 Pipfile.lock
 fastapi/__pycache__/books.cpython-311.pyc
+fastapi/__pycache__/
