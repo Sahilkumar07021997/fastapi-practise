@@ -1,7 +1,8 @@
 from typing import Optional
 
-from fastapi import FastAPI, Path, Query
+from fastapi import FastAPI, Path, Query, HTTPException
 from pydantic import BaseModel, Field
+from starlette import status
 
 app = FastAPI()
 
@@ -54,7 +55,7 @@ BOOKS = [
 ]
 
 
-@app.get("/books")
+@app.get("/books", status_code=status.HTTP_200_OK)
 async def read_all_books():
     return BOOKS
 
@@ -64,7 +65,7 @@ async def read_all_books():
 #     BOOKS.append(new_book)
 #     return BOOKS[-1]
 
-@app.post("/create_book")  # After adding Validation
+@app.post("/create_book", status_code=status.HTTP_201_CREATED)  # After adding Validation
 async def create_book(new_book: BookRequest):
     book = Book(**new_book.model_dump())
     BOOKS.append(get_book_index(book))
@@ -76,33 +77,39 @@ def get_book_index(book: Book):
     return book
 
 
-@app.get("/books/{book_id}")  # Path Parameter with Validation example.
+@app.get("/books/{book_id}", status_code=status.HTTP_200_OK)  # Path Parameter with Validation example.
 async def read_book(book_id: int = Path(..., gt=0, description="The ID of the user")):
     for book in BOOKS:
         if book.id == book_id:
             return book
-    return {"message": "Book not found"}
+    raise HTTPException(status_code=404, detail="Book not found")
 
 
-@app.get("/books/")  # Query Parameter example wth Query validation. Example URL -> /books/?book_rating=4
+@app.get("/books/", status_code=status.HTTP_200_OK)  # Query Parameter example wth Query validation. Example URL -> /books/?book_rating=4
 async def read_book_by_rating(book_rating: int = Query(..., gt=-1, lt=6, description="The rating of the book")):
     books = [book for book in BOOKS if book.rating == str(book_rating)]
     return books
 
 
-@app.put("/books/update_book")
+@app.put("/books/update_book", status_code=status.HTTP_200_OK)
 async def update_book(updated_book: BookRequest):
+    book_changed = False
     for index, book in enumerate(BOOKS):
         if book.id == updated_book.id:
             BOOKS[index] = Book(**updated_book.model_dump())
+            book_changed = True
             return BOOKS[index]
-    return {"message": "Book not found"}
+    if not book_changed:
+        raise HTTPException(status_code=404, detail="Book not found")
 
 
-@app.delete("/books/{book_id}")
+@app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book(book_id: int):
+    book_deleted = False
     for index, book in enumerate(BOOKS):
         if book.id == book_id:
             deleted_book = BOOKS.pop(index)
-            return {"message": "Book deleted successfully", "book": deleted_book}
-    return {"message": "Book not found"}
+            book_deleted = True
+            break
+    if not book_deleted:
+        raise HTTPException(status_code=404, detail="Book not found")
