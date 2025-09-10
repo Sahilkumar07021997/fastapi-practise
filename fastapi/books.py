@@ -19,16 +19,19 @@ BOOKS = BOOKS = [
 
 @app.get("/")
 async def welcome():
+    """Welcome message"""
     return {"message": "Hello, Sahil kumar!"}
 
 
 @app.get("/books")
 async def get_books():
+    """Get all books"""
     return BOOKS
 
 
 @app.get("/books/{book_genre}")  # Dynamic Path Parameter example.
 async def get_book(book_genre: str):
+    """Get books by genre"""
     books = [book for book in BOOKS if book["genre"].casefold() == book_genre.casefold()]
     return books
 
@@ -36,6 +39,7 @@ async def get_book(book_genre: str):
 # Path and Query Parameter both together example. Example URL -> /books/english?limit=2&skip=2
 @app.get("/books/lang/{book_language}")
 async def get_book(book_language: str, limit: int = 10, skip: int = 0):
+    """Get books by language with pagination"""
     books = [book for book in BOOKS if book["language"].casefold() == book_language.casefold()]
     return books[skip: skip + limit]
 
@@ -43,6 +47,7 @@ async def get_book(book_language: str, limit: int = 10, skip: int = 0):
 # POST method example.
 @app.post("/books/create_book")
 async def create_book(new_book=Body(...)):
+    """Create a new book"""
     BOOKS.append(new_book)
     return BOOKS[-1]
 
@@ -50,6 +55,7 @@ async def create_book(new_book=Body(...)):
 # PUT method example.
 @app.put("/books/update_book")
 async def update_book(updated_book=Body(...)):
+    """Update an existing book"""
     for index, book in enumerate(BOOKS):
         if book["title"].casefold() == updated_book["title"].casefold():
             BOOKS[index] = updated_book
@@ -60,6 +66,7 @@ async def update_book(updated_book=Body(...)):
 # DELETE method example.
 @app.delete("/books/delete_book/{book_title}")
 async def delete_book(book_title: str):
+    """Delete a book by title"""
     for index, book in enumerate(BOOKS):
         if book["title"].casefold() == book_title.casefold():
             deleted_book = BOOKS.pop(index)
