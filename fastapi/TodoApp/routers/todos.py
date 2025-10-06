@@ -5,6 +5,7 @@ from typing_extensions import Annotated
 
 from database import SessionLocal
 from models import Todos
+from routers.auth import get_current_user
 
 # Create FastAPI instance
 router = APIRouter()
@@ -20,6 +21,7 @@ def get_db():
 
 
 db_dependency = Annotated[SessionLocal, Depends(get_db)]
+user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 class TodoRequest(BaseModel):
@@ -30,25 +32,33 @@ class TodoRequest(BaseModel):
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def read_all(db: db_dependency):
+async def read_all(user: user_dependency, db: db_dependency):
     """Read all todo items"""
-    todos = db.query(Todos).all()
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    todos = db.query(Todos).filter(Todos.owner_id == user.get('id')).all()
     return todos
 
 
 @router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)
-async def read_todo(db: db_dependency, todo_id: int = Path(..., gt=0)):
+async def read_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(..., gt=0)):
     """Read a specific todo item by ID"""
-    todo = db.query(Todos).filter(Todos.id == todo_id).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    todo = db.query(Todos).filter(Todos.owner_id == user.get('id'), Todos.id == todo_id).first()
     if todo is not None:
         return todo
     raise HTTPException(status_code=404, detail="Todo not found")
 
 
 @router.post("/todo", status_code=status.HTTP_201_CREATED)
-async def create_todo(db: db_dependency, todo_request: TodoRequest):
+async def create_todo(user: user_dependency, db: db_dependency, todo_request: TodoRequest):
     """Create a new todo item"""
-    new_todo = Todos(**todo_request.dict())
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    new_todo = Todos(**todo_request.dict(), owner_id=user.get('id'))
     db.add(new_todo)
     db.commit()
     db.refresh(new_todo)
@@ -57,12 +67,16 @@ async def create_todo(db: db_dependency, todo_request: TodoRequest):
 
 @router.put("/todo/{todo_id}", status_code=status.HTTP_200_OK)
 async def update_todo(
+        user: user_dependency,
         db: db_dependency,
         todo_request: TodoRequest,
         todo_id: int = Path(..., gt=0)
 ):
     """Update an existing to-do item by ID"""
-    todo = db.query(Todos).filter(Todos.id == todo_id).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    todo = db.query(Todos).filter(Todos.owner_id == user.get('id'), Todos.id == todo_id).first()
+
     if todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
 
@@ -75,9 +89,11 @@ async def update_todo(
 
 
 @router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(db: db_dependency, todo_id: int = Path(..., gt=0)):
+async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(..., gt=0)):
     """Delete a to-do item by ID"""
-    todo = db.query(Todos).filter(Todos.id == todo_id).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    todo = db.query(Todos).filter(Todos.owner_id == user.get('id'), Todos.id == todo_id).first()
     if todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
 
